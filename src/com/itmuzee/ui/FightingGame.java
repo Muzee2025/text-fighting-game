@@ -1,5 +1,6 @@
 package com.itmuzee.ui;
 
+import com.itmuzee.domain.Consumable;
 import com.itmuzee.domain.EnemyCharacters;
 import com.itmuzee.domain.HeroCharacters;
 
@@ -8,6 +9,37 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class FightingGame {
+
+    //添加嘲讽话术
+    private final ArrayList<String> tauntMessages = new ArrayList<>();
+    private final  ArrayList<Consumable> dropPool = new ArrayList<>();
+
+    public FightingGame(){
+        tauntMessages.add("就这？我还没用力呢！");
+        tauntMessages.add("你的实力不过如此，回去练练再来吧。");
+        tauntMessages.add("哈哈哈哈，弱者！连我的衣角都碰不到。");
+        tauntMessages.add("勇气可嘉，但力量为零。");
+        tauntMessages.add("下次记得带点真本事来。");
+        tauntMessages.add("你让我失望了，这也叫战斗？");
+        tauntMessages.add("我的宠物都比你强！");
+        tauntMessages.add("输得不冤，因为你根本没赢过。");
+        tauntMessages.add("早点认输还能少受点罪。");
+        tauntMessages.add("你的攻击像挠痒痒一样。");
+
+        dropPool.add(new Consumable("桃子",10));
+        dropPool.add(new Consumable("煎蛋",20));
+        dropPool.add(new Consumable("花酿鸡",30));
+        dropPool.add(new Consumable("黑背鲈鱼",40));
+        dropPool.add(new Consumable("白玉汤",50));
+    }
+
+
+
+    private void getRandomTaunt(){
+        Random r = new Random();
+        int index = r.nextInt(tauntMessages.size());
+        System.out.println(tauntMessages.get(index));
+    }
 
     //启动游戏
     public void gameStart(String username) {
@@ -32,6 +64,8 @@ public class FightingGame {
         //进入循环准备战斗
         int win = 0;
         int count = 1;//当前是跟第几个敌人战斗
+
+
 
         while (player.isAlive()) {
             if (win != 0) {
@@ -98,11 +132,23 @@ public class FightingGame {
                 int healHP = r.nextInt(21) + 20;
                 //恢复玩家的血量
                 player.heal(healHP);
-                System.out.println("战斗结束！你恢复了" + healHP + "点血量！");
+                int healMP = r.nextInt(5) + 5;
+
+                player.restoreMP(healMP);
+
+                //有概率 掉出不同的道具
+                if(r.nextInt(100)<30){
+                    Consumable item = dropPool.get(r.nextInt(dropPool.size()));
+                    System.out.println("恭喜你，获得了" + item.getName() + "！" + item.getHealAmount() + "点恢复量！");
+                    player.addConsumable(item);
+                }else{
+                    System.out.println("可惜，没有获得任何道具加成~");
+                }
+
+                System.out.println("战斗结束！你恢复了" + healHP + "点血量！" + healMP + "点蓝量！");
                 System.out.println("当前胜场：" + win);
                 System.out.println("=============================================");
             }
-
 
 
             //每胜利三场，任务的属性就要增加
@@ -110,11 +156,12 @@ public class FightingGame {
                 System.out.println("恭喜你，获得了属性的提升！");
                 player.attack += 5;
                 player.defense += 3;
-
+                player.maxMP += 10;
                 player.maxHP += 30;
                 System.out.println("最大生命值提升30！当前最大生命值为：" + player.maxHP);
                 System.out.println("攻击提升5！当前攻击为：" + player.attack);
                 System.out.println("防御提升3！当前防御为：" + player.defense);
+                System.out.println("蓝条提升10！当前蓝条为：" + player.maxMP);
 
 
             }
@@ -136,6 +183,11 @@ public class FightingGame {
                 }
             }
 
+            //如果被击败 嘲讽
+            if (!player.isAlive()){
+                getRandomTaunt();
+            }
+
 
         }
 
@@ -143,7 +195,7 @@ public class FightingGame {
         //游戏结算
         System.out.println("========================================");
         System.out.println("游戏结束！感谢游玩！");
-        System.out.println("你的最终胜场为："+win);
+        System.out.println("你的最终胜场为：" + win);
         System.out.println("感谢游玩文字版格斗游戏！");
         System.exit(0);
 
@@ -202,9 +254,24 @@ public class FightingGame {
         System.out.println("1. 普通攻击");
         System.out.println("2. 强力一击");
         System.out.println("3. 生命汲取");
+        System.out.println("4. 使用道具");
         Scanner sc = new Scanner(System.in);
         String choice = sc.next();
         switch (choice) {
+            case "4":
+                System.out.println("你选择了：4 使用道具！");
+                //显示道具列表
+                for (int i = 0; i < player.inventory.size(); i++) {
+                    System.out.println("目前背包里面有：" + player.inventory.get(i).getName());
+                }
+                System.out.println("请选择使用道具：");
+                //选择道具
+                String choice2 = sc.next();
+                //使用道具
+                player.useConsumable(choice2);
+
+                System.out.println("你使用了" + choice2 + "！");
+                break;
             default:
                 System.out.println("无效的选择，默认进行普通攻击");
             case "1":
@@ -217,7 +284,7 @@ public class FightingGame {
             case "2":
                 System.out.println("你选择了：2 强力一击！");
                 if (player.HP < 10) {
-                    System.out.println("你的生命值不足10，无法使用强力一击！");
+                    System.out.println("你的血量不足10，无法使用强力一击！");
                 } else {
                     int strongDamage = calculateDamage((int) (player.attack * 1.8), enemy.defense);
                     System.out.println("你对" + enemy.name + "造成了" + strongDamage + "点伤害！");
@@ -227,18 +294,21 @@ public class FightingGame {
                 break;
             case "3":
                 System.out.println("你选择了：3 生命汲取！");
-                if (player.HP < 10) {
-                    System.out.println("你的生命值不足10，无法使用生命汲取！");
+                if (player.MP < 10) {
+                    System.out.println("你的蓝量不足10，无法使用生命汲取！");
                 } else {
-                    player.takeDemage(10);
+                    player.useMP(1);
                     Random r = new Random();
-                    int healHP = r.nextInt(21);
+                    int healHP = r.nextInt(21) + 20;
                     player.heal(healHP);
-                    System.out.println("消耗了10点生命值,你恢复了" + healHP + "点生命值！");
+                    System.out.println("消耗了1点蓝量,你恢复了" + healHP + "点血量！");
                 }
                 break;
         }
     }
+
+
+
 
     //计算普通攻击的伤害
     //伤害 = 攻击力 - 对方的防御力 ；若伤害小于0 则最小伤害为1；
@@ -276,10 +346,10 @@ public class FightingGame {
         System.out.println("请创建你的角色");
         System.out.println("您的角色名为：" + username);
 
-        int point = 20;
-        System.out.println("请分配属性点（共20点）：");
-        String[] attributes = {"生命值", "攻击力", "防御力"};
-        int[] values = new int[3];
+        int point = 30;
+        System.out.println("请分配属性点（共30点）：");
+        String[] attributes = {"生命值", "攻击力", "防御力", "蓝条"};
+        int[] values = new int[4];
 
         for (int i = 0; i < attributes.length; i++) {
             System.out.println((i + 1) + "、" + attributes[i]);
@@ -313,7 +383,8 @@ public class FightingGame {
                 username,
                 100 + values[0] * 10,//生命
                 10 + values[1] * 2,//攻击
-                0 + values[2] * 1//防御
+                0 + values[2] * 1,//防御
+                0 + values[3] * 5//蓝条
         );
 
         //还有英雄的技能需要说明

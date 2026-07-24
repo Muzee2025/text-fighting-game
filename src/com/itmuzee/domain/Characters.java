@@ -41,6 +41,9 @@ public class Characters {
         }
     }
 
+
+
+
     //4、展示人物属性
     public String show() {
 

@@ -2,6 +2,7 @@ package com.itmuzee.ui;
 
 import com.itmuzee.domain.User;
 
+import javax.sound.midi.Soundbank;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
@@ -20,7 +21,7 @@ public class Login {
             System.out.println("┌──────────────────────────────────────────────┐");
             System.out.println("        🎮 欢迎来到文字格斗游戏 🎮        ");
             System.out.println("└──────────────────────────────────────────────┘");
-            System.out.println("请选择操作：1登录  2注册  3退出");
+            System.out.println("请选择操作：1登录  2注册  3忘记密码");
 
             Scanner sc = new Scanner(System.in);
             String choose = sc.next();
@@ -33,8 +34,8 @@ public class Login {
                     register(list);
                     break;
                 case "3":
-                    System.out.println("用户选择了退出操作");
-                    System.exit(0);
+                    System.out.println("用户选择了忘记密码操作");
+                    forgetPassword(list);
                     break;
                 default:
                     System.out.println("没有这个操作，拜拜~");
@@ -45,6 +46,44 @@ public class Login {
 
     }
 
+    //忘记密码操作
+    public void forgetPassword(ArrayList<User> list) {
+        System.out.println("用户选择了忘记密码界面");
+        System.out.println("请输入您的用户名：");
+        Scanner sc = new Scanner(System.in);
+        String username = sc.next();
+        if (!contine(list, username)) {
+            System.out.println("当前用户不存在，请返回注册~");
+            return;
+        }
+
+        System.out.println("请输入您的手机号：");
+        String phone = sc.next();
+        if (!cheakPhone(phone)) {
+            System.out.println("手机号输入错误，请返回注册~");
+            return;
+        }
+
+        //如果用户名和手机号可以对上，则可以重置密码
+        System.out.println("请输入新的密码：");
+        String password = sc.next();
+        System.out.println("请输入确认密码：");
+        String password2 = sc.next();
+        if (!password.equals(password2)) {
+            System.out.println("两次输入的密码不一致，请重新输入~");
+            return;
+        }
+        //修改密码
+        for (int i = 0; i < list.size(); i++) {
+            User u = list.get(i);
+            if (u.getUsername().equals(username) && u.getPhone().equals(phone)) {
+                u.setPassword(password);
+                System.out.println("密码修改成功~");
+                return;
+            }
+        }
+        System.out.println("密码修改失败，请检查用户名和手机号~");
+    }
     //登陆操作
     public void login(ArrayList<User> list) {
         System.out.println("用户选择了登陆界面");
@@ -154,7 +193,8 @@ public class Login {
             Scanner sc = new Scanner(System.in);
             System.out.println("请输入用户名：");
             String username = sc.next();
-
+            System.out.println("请输入您的手机号：");
+            String phone = sc.next();
 
             //判断用户名的长度是否符合要求
             //长度必须在3~ 16位
@@ -176,9 +216,14 @@ public class Login {
                 continue;
             }
 
+            if(!cheakPhone(phone)) {
+                System.out.println("手机号输入错误，请重新输入~");
+                continue;
+            }
 
             //如果成功运行到这里，说明代码符合要求，将username添加到User中
             u.setUsername(username);
+            u.setPhone(phone);
             break;
         }
 
@@ -227,6 +272,17 @@ public class Login {
         System.out.println("用户注册成功！");
 
     }
+
+    //判断用户输入的手机号是否符合要求
+    public boolean cheakPhone(String phone) {
+        if (phone.length() == 11 && phone.startsWith("1")) {
+            System.out.println("手机号输入正确~");
+        } else {
+            System.out.println("手机号输入错误，请重新输入~");
+        }
+        return phone.length() == 11 && phone.startsWith("1");
+    }
+
 
     //判断用户名长度是否符合要求的方法
     public Boolean cheaklen(int minLen, int maxLen, String username) {
